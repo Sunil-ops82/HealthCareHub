@@ -54,9 +54,28 @@ public class BillingServiceImpl implements BillingService {
     }
 
     /**
-     * Convert individual Payment to BillingHistoryResponse
+     * Convert individual Payment to BillingHistoryResponse with null-safety checks
      */
     private BillingHistoryResponse convertPaymentToBillingHistory(Payment payment) {
+        if (payment == null) {
+            throw new IllegalArgumentException("Payment is null");
+        }
+
+        var appointment = payment.getAppointment();
+        if (appointment == null) {
+            throw new IllegalArgumentException("Appointment not found for payment id: " + payment.getId());
+        }
+
+        var patient = appointment.getPatient();
+        if (patient == null) {
+            throw new IllegalArgumentException("Patient not found for appointment id: " + appointment.getId());
+        }
+
+        var doctor = appointment.getDoctor();
+        if (doctor == null) {
+            throw new IllegalArgumentException("Doctor not found for appointment id: " + appointment.getId());
+        }
+
         return BillingHistoryResponse.builder()
                 .paymentId(payment.getId())
                 .amount(payment.getAmount())
@@ -64,15 +83,14 @@ public class BillingServiceImpl implements BillingService {
                 .paymentDate(payment.getPaymentDate())
                 .createdTime(payment.getCreatedTime())
                 .updatedTime(payment.getUpdatedTime())
-                .appointmentId(payment.getAppointment().getId())
-                .appointmentDateTime(payment.getAppointment().getAppointmentDateTime())
-                .appointmentStatus(payment.getAppointment().getStatus())
-                .doctorId(payment.getAppointment().getDoctor().getId())
-                .doctorName(payment.getAppointment().getDoctor().getName())
-                .doctorSpecialization(String.valueOf(payment.getAppointment().getDoctor().getSpecialization()))
-                .patientId(payment.getAppointment().getPatient().getId())
-                .patientName(payment.getAppointment().getPatient().getName())
+                .appointmentId(appointment.getId())
+                .appointmentDateTime(appointment.getAppointmentDateTime())
+                .appointmentStatus(appointment.getStatus())
+                .doctorId(doctor.getId())
+                .doctorName(doctor.getName())
+                .doctorSpecialization(doctor.getSpecialization() != null ? String.valueOf(doctor.getSpecialization()) : null)
+                .patientId(patient.getId())
+                .patientName(patient.getName())
                 .build();
     }
 }
-
